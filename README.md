@@ -7,41 +7,11 @@ Two firmware variants are provided:
 | Variant | Target | Connectivity |
 |---|---|---|
 | `esp32-stratum1-ntp` | ESP32 (classic) | Wi-Fi |
-| `esp32p4-stratum1-ntp` | ESP32-P4 | Ethernet (preferred) + Wi-Fi fallback |
-
----
-
-## Table of Contents
-
-- [How It Works](#how-it-works)
-- [Features](#features)
-- [Hardware Requirements](#hardware-requirements)
-- [Wiring](#wiring)
-- [Software Requirements](#software-requirements)
-- [Configuration](#configuration)
-- [Flashing](#flashing)
-- [Services](#services)
-- [NTP Packet Structure](#ntp-packet-structure)
-- [Verifying Operation](#verifying-operation)
-- [Project Structure](#project-structure)
-- [License](#license)
+| `esp32p4-stratum1-ntp` | ESP32-P4 | Ethernet + Wi-Fi fallback |
 
 ---
 
 ## How It Works
-
-```
-GPS Receiver (UART, 9600 baud)
-        │
-        ├─── NMEA sentences ──► TinyGPSPlus parser ──► UTC date/time (1-second resolution)
-        │
-        └─── PPS signal ──► GPIO interrupt (IRAM_ATTR) ──► microsecond timestamp of each second edge
-                                                                │
-                                                                ▼
-                                              NTP timestamp = GPS epoch seconds
-                                                            + micros() elapsed since last PPS edge
-                                                            + fractional second (32-bit NTP format)
-```
 
 The GPS module continuously outputs NMEA sentences over UART. The `TinyGPSPlus` library parses these to extract UTC date and time, which are converted to Unix epoch seconds and then to NTP epoch (offset by 2,208,988,800 seconds, the number of seconds between 1 January 1900 and 1 January 1970).
 
@@ -94,7 +64,6 @@ This approach produces timestamps with microsecond-class resolution, bounded by 
 | GPS VCC | 3.3 V |
 | GPS GND | GND |
 
-> The GPS TX→RX and RX→TX labels refer to the direction from the GPS module's perspective. Connect the GPS module's TX pin to the ESP32's RX pin (GPIO 16), and the GPS module's RX pin to the ESP32's TX pin (GPIO 17).
 
 ### ESP32-P4
 
@@ -105,8 +74,6 @@ This approach produces timestamps with microsecond-class resolution, bounded by 
 | GPS PPS | GPIO 21 |
 | GPS VCC | 3.3 V |
 | GPS GND | GND |
-
-> Ethernet is handled by the on-chip MAC and requires a compatible PHY chip. Refer to your specific ESP32-P4 development board schematic for the Ethernet PHY connections.
 
 ---
 
@@ -270,24 +237,3 @@ Then check synchronisation status:
 chronyc sources -v
 chronyc tracking
 ```
-
----
-
-## Project Structure
-
-```
-esp32-gps-ntp/
-├── src/
-│   ├── esp32-stratum1-ntp/
-│   │   └── esp32-stratum1-ntp.ino     # ESP32 (classic) firmware
-│   └── esp32p4-stratum1-ntp/
-│       └── esp32p4-stratum1-ntp.ino   # ESP32-P4 firmware (Ethernet + Wi-Fi)
-├── LICENSE
-└── README.md
-```
-
----
-
-## License
-
-This project is licensed under the **Apache License 2.0**. See [LICENSE](LICENSE) for the full text.
